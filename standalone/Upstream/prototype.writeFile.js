@@ -28,7 +28,8 @@ module.exports = function writeFile (__filestream) {
 
   // Set up error handler for the new __filestream:
   //
-  __filestream.once('error', function(err) {
+  var not_twice = false;
+  __filestream.on('error', function(err) {
 
     // If the __filestream is not being consumed (i.e. this Upstream is not
     // `connected` to anything), then we shouldn't allow errors on it to
@@ -53,6 +54,9 @@ module.exports = function writeFile (__filestream) {
     // an error occurs (I don't see why we would..)
     // Anyways, it's absolutely crucial that this pipe to a `leaky` Writable
     // for everything to work.  Otherwise, responses never get sent.
+    if(not_twice)
+      return;
+    not_twice = true;
     var leaky = new Writable();
     leaky._write = function(chunk, encoding, cb) {
       cb();
